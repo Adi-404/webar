@@ -51,8 +51,8 @@ export function XRDebugPanel() {
   }, []);
 
   return (
-    <div className="fixed bottom-4 left-4 bg-gray-900/95 text-white p-4 rounded-lg text-xs max-w-sm z-50 backdrop-blur-sm">
-      <h3 className="font-bold mb-2 text-blue-300">WebXR Debug Panel</h3>
+    <div className="fixed bottom-2 lg:bottom-4 left-2 lg:left-4 bg-gray-900/95 text-white p-2 lg:p-4 rounded-lg text-xs max-w-[280px] lg:max-w-sm z-50 backdrop-blur-sm">
+      <h3 className="font-bold mb-2 text-blue-300 text-xs lg:text-sm">WebXR Debug</h3>
       
       <div className="space-y-1">
         <div className="flex justify-between">
@@ -92,7 +92,7 @@ export function XRDebugPanel() {
         {!xrInfo.isHTTPS && (
           <div className="mt-2 p-2 bg-orange-500/20 border border-orange-500/40 rounded">
             <p className="text-orange-300 text-xs">
-              ⚠️ WebXR requires HTTPS. Run: <code>npm run dev:https</code>
+              ⚠️ WebXR requires HTTPS. Run: <code className="bg-black/30 px-1 rounded">npm run dev:https</code>
             </p>
           </div>
         )}

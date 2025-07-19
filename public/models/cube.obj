@@ -1,0 +1,32 @@
+# Enhanced cube OBJ file with normals
+# Vertices
+v -1.0 -1.0  1.0
+v  1.0 -1.0  1.0
+v  1.0  1.0  1.0
+v -1.0  1.0  1.0
+v -1.0 -1.0 -1.0
+v  1.0 -1.0 -1.0
+v  1.0  1.0 -1.0
+v -1.0  1.0 -1.0
+
+# Vertex normals
+vn  0.0  0.0  1.0
+vn  0.0  0.0 -1.0
+vn  0.0 -1.0  0.0
+vn  0.0  1.0  0.0
+vn  1.0  0.0  0.0
+vn -1.0  0.0  0.0
+
+# Faces with normals
+# Front face
+f 1//1 2//1 3//1 4//1
+# Back face
+f 8//2 7//2 6//2 5//2
+# Bottom face
+f 1//3 5//3 6//3 2//3
+# Top face
+f 4//4 3//4 7//4 8//4
+# Right face
+f 2//5 6//5 7//5 3//5
+# Left face
+f 5//6 1//6 4//6 8//6

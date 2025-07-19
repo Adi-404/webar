@@ -6,10 +6,11 @@ import { XRControls } from './components/XRControls';
 import { ControlPanel } from './components/ControlPanel';
 import { BasicThreeFiberExample } from './components/BasicThreeFiberExample';
 import { XRDebugPanel } from './components/XRDebugPanel';
+import { CameraDebugPanel } from './components/CameraDebugPanel';
 
 function App() {
-  const [modelUrl, setModelUrl] = useState<string | null>(null);
-  const [fileName, setFileName] = useState<string>('');
+  const [modelUrl, setModelUrl] = useState<string | null>('/models/apple.obj'); // Pre-load apple model
+  const [fileName, setFileName] = useState<string>('apple.obj'); // Pre-set filename
   const [isXRMode, setIsXRMode] = useState(false);
   const [showBasicExample, setShowBasicExample] = useState(false);
 
@@ -19,11 +20,12 @@ function App() {
   };
 
   const handleClearFile = () => {
-    if (modelUrl) {
+    // Only revoke blob URLs, not static file URLs
+    if (modelUrl && modelUrl.startsWith('blob:')) {
       URL.revokeObjectURL(modelUrl);
     }
-    setModelUrl(null);
-    setFileName('');
+    setModelUrl('/models/apple.obj'); // Reset to default apple model
+    setFileName('apple.obj'); // Reset to default filename
   };
 
   const handleXRModeChange = (mode: boolean) => {
@@ -33,22 +35,22 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
-      <header className="relative z-10 p-6">
-        <div className="flex items-center justify-between">
+      <header className="relative z-10 p-4 lg:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-indigo-500 rounded-lg">
-              <Box className="h-6 w-6 text-white" />
+              <Box className="h-5 w-5 lg:h-6 lg:w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">3D Model Viewer</h1>
-              <p className="text-gray-300 text-sm">WebXR-enabled • React Three Fiber</p>
+              <h1 className="text-xl lg:text-2xl font-bold text-white">3D Model Viewer</h1>
+              <p className="text-gray-300 text-xs lg:text-sm">WebXR-enabled • React Three Fiber</p>
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
             <button
               onClick={() => setShowBasicExample(!showBasicExample)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-3 lg:px-4 py-2 rounded-lg font-medium transition-colors text-sm w-full sm:w-auto ${
                 showBasicExample
                   ? 'bg-purple-600 text-white'
                   : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -66,19 +68,19 @@ function App() {
         </div>
       </header>
 
-      <div className="flex flex-col lg:flex-row h-[calc(100vh-120px)]">
+      <div className="flex flex-col lg:flex-row h-[calc(100vh-140px)] lg:h-[calc(100vh-120px)]">
         {/* Sidebar */}
-        <div className="w-full lg:w-80 bg-gray-900/50 backdrop-blur-sm border-r border-gray-700">
-          <div className="p-6">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+        <div className="w-full lg:w-80 bg-gray-900/50 backdrop-blur-sm border-b lg:border-b-0 lg:border-r border-gray-700 overflow-y-auto">
+          <div className="p-4 lg:p-6">
+            <h2 className="text-base lg:text-lg font-semibold text-white mb-4 flex items-center space-x-2">
               {showBasicExample ? (
                 <>
-                  <Boxes className="h-5 w-5" />
+                  <Boxes className="h-4 lg:h-5 w-4 lg:w-5" />
                   <span>Basic Example</span>
                 </>
               ) : (
                 <>
-                  <Eye className="h-5 w-5" />
+                  <Eye className="h-4 lg:h-5 w-4 lg:w-5" />
                   <span>Model Library</span>
                 </>
               )}
@@ -160,7 +162,6 @@ function App() {
               <ModelViewer 
                 modelUrl={modelUrl}
                 isXRMode={isXRMode}
-                onXRModeChange={handleXRModeChange}
               />
               
               <ControlPanel isXRMode={isXRMode} />
@@ -168,18 +169,19 @@ function App() {
           )}
           
           {/* Status Indicator */}
-          <div className="absolute top-4 right-4">
-            <div className="bg-black/20 backdrop-blur-sm rounded-lg px-3 py-2">
-              <span className={`text-sm font-medium ${isXRMode ? 'text-purple-300' : 'text-green-300'}`}>
-                {isXRMode ? '🥽 XR Mode' : '🖥️ Desktop Mode'}
+          <div className="absolute top-2 lg:top-4 right-2 lg:right-4">
+            <div className="bg-black/20 backdrop-blur-sm rounded-lg px-2 lg:px-3 py-1 lg:py-2">
+              <span className={`text-xs lg:text-sm font-medium ${isXRMode ? 'text-purple-300' : 'text-green-300'}`}>
+                {isXRMode ? '🥽 XR' : '🖥️ Desktop'}
               </span>
             </div>
           </div>
         </div>
       </div>
       
-      {/* XR Debug Panel */}
+      {/* Debug Panels */}
       <XRDebugPanel />
+      <CameraDebugPanel />
     </div>
   );
 }

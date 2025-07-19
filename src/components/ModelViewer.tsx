@@ -1,5 +1,5 @@
 import { Suspense, useRef, useState, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas} from '@react-three/fiber';
 import { OrbitControls, Environment, ContactShadows, Text, Html } from '@react-three/drei';
 import { XR, Controllers, Hands, VRButton, ARButton } from '@react-three/xr';
 import { Group } from 'three';
@@ -9,10 +9,9 @@ import { Loader } from './Loader';
 interface ModelViewerProps {
   modelUrl: string | null;
   isXRMode: boolean;
-  onXRModeChange?: (mode: boolean) => void;
 }
 
-export function ModelViewer({ modelUrl, isXRMode, onXRModeChange }: ModelViewerProps) {
+export function ModelViewer({ modelUrl, isXRMode }: ModelViewerProps) {
   const groupRef = useRef<Group>(null);
   const [modelError, setModelError] = useState<string | null>(null);
   const [xrSupported, setXrSupported] = useState({ ar: false, vr: false });
@@ -51,9 +50,9 @@ export function ModelViewer({ modelUrl, isXRMode, onXRModeChange }: ModelViewerP
     <div className="relative w-full h-full">
       {/* Debug Info */}
       {modelUrl && (
-        <div className="absolute top-4 left-4 bg-black/80 text-white p-2 rounded text-xs z-50">
-          <p>Model URL: {modelUrl ? '✓' : '✗'}</p>
-          <p>XR Mode: {isXRMode ? 'ON' : 'OFF'}</p>
+        <div className="absolute top-2 lg:top-4 left-2 lg:left-4 bg-black/80 text-white p-2 rounded text-xs z-50 max-w-[200px] lg:max-w-none">
+          <p>Model: {modelUrl ? '✓' : '✗'}</p>
+          <p>XR: {isXRMode ? 'ON' : 'OFF'}</p>
           <p>Error: {modelError || 'None'}</p>
         </div>
       )}
@@ -69,14 +68,19 @@ export function ModelViewer({ modelUrl, isXRMode, onXRModeChange }: ModelViewerP
         className="bg-gradient-to-b from-slate-900 to-slate-800"
       >
         {/* XR Setup for AR/VR */}
-        {isXRMode && (
-          <XR 
-            referenceSpace="local-floor"
-          >
-            <Controllers />
-            <Hands />
-          </XR>
-        )}
+        <XR 
+          referenceSpace="local-floor"
+          onSessionStart={() => {
+            console.log('XR Session Started');
+            console.log('AR mode should enable camera access');
+          }}
+          onSessionEnd={() => {
+            console.log('XR Session Ended');
+          }}
+        >
+          <Controllers />
+          <Hands />
+        </XR>
         
         {/* Lighting Setup - Adjusted for AR */}
         <ambientLight intensity={isXRMode ? 0.8 : 0.4} />
@@ -145,14 +149,14 @@ export function ModelViewer({ modelUrl, isXRMode, onXRModeChange }: ModelViewerP
         {/* XR Buttons - Must be inside Canvas */}
         <Html position={[0, 0, 0]} transform={false} style={{ 
           position: 'fixed', 
-          top: '90px', 
-          right: '20px', 
+          top: window.innerWidth < 768 ? '120px' : '90px', // Adjust for mobile header
+          right: '10px',
           zIndex: 1000 
         }}>
           <div className="flex flex-col space-y-2">
             {/* WebXR Support Check */}
             {!navigator.xr && (
-              <div className="bg-orange-500/90 text-white p-3 rounded-lg text-sm max-w-xs">
+              <div className="bg-orange-500/90 text-white p-2 lg:p-3 rounded-lg text-xs lg:text-sm max-w-xs">
                 <p className="font-medium">WebXR Not Available</p>
                 <p className="text-xs opacity-90">
                   Using HTTPS: {location.protocol === 'https:' ? '✓' : '✗'}
@@ -166,59 +170,63 @@ export function ModelViewer({ modelUrl, isXRMode, onXRModeChange }: ModelViewerP
             {/* VR Button */}
             <VRButton 
               style={{
-                padding: '12px 16px',
+                padding: window.innerWidth < 768 ? '10px 12px' : '12px 16px',
                 backgroundColor: xrSupported.vr 
                   ? 'rgba(59, 130, 246, 0.95)' 
                   : 'rgba(107, 114, 128, 0.95)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
-                fontSize: '14px',
+                fontSize: window.innerWidth < 768 ? '12px' : '14px',
                 fontWeight: '500',
                 cursor: xrSupported.vr ? 'pointer' : 'not-allowed',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
+                gap: '6px',
                 backdropFilter: 'blur(8px)',
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                opacity: xrSupported.vr ? 1 : 0.6
+                opacity: xrSupported.vr ? 1 : 0.6,
+                minWidth: window.innerWidth < 768 ? '120px' : '140px'
               }}
             >
-              🥽 {xrSupported.vr ? 'Enter VR' : 'VR Unavailable'}
+              🥽 {window.innerWidth < 768 ? 'VR' : (xrSupported.vr ? 'Enter VR' : 'VR Unavailable')}
             </VRButton>
             
             {/* AR Button */}
             <ARButton 
               style={{
-                padding: '12px 16px',
+                padding: window.innerWidth < 768 ? '10px 12px' : '12px 16px',
                 backgroundColor: xrSupported.ar 
                   ? 'rgba(16, 185, 129, 0.95)' 
                   : 'rgba(107, 114, 128, 0.95)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
-                fontSize: '14px',
+                fontSize: window.innerWidth < 768 ? '12px' : '14px',
                 fontWeight: '500',
                 cursor: xrSupported.ar ? 'pointer' : 'not-allowed',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
+                gap: '6px',
                 backdropFilter: 'blur(8px)',
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                opacity: xrSupported.ar ? 1 : 0.6
+                opacity: xrSupported.ar ? 1 : 0.6,
+                minWidth: window.innerWidth < 768 ? '120px' : '140px'
               }}
             >
-              📱 {xrSupported.ar ? 'Enter AR' : 'AR Unavailable'}
+              📱 {window.innerWidth < 768 ? 'AR' : (xrSupported.ar ? 'Enter AR' : 'AR Unavailable')}
             </ARButton>
             
-            {/* Status Info */}
-            <div className="bg-gray-900/90 text-gray-300 p-2 rounded-lg text-xs max-w-xs">
-              <p className="font-medium mb-1">Status:</p>
-              <p>HTTPS: {location.protocol === 'https:' ? '✅' : '❌'}</p>
-              <p>WebXR: {navigator.xr ? '✅' : '❌'}</p>
-              <p>VR: {xrSupported.vr ? '✅' : '❌'}</p>
-              <p>AR: {xrSupported.ar ? '✅' : '❌'}</p>
-            </div>
+            {/* Status Info - Hide on very small screens */}
+            {window.innerWidth >= 640 && (
+              <div className="bg-gray-900/90 text-gray-300 p-2 rounded-lg text-xs max-w-xs">
+                <p className="font-medium mb-1">Status:</p>
+                <p>HTTPS: {location.protocol === 'https:' ? '✅' : '❌'}</p>
+                <p>WebXR: {navigator.xr ? '✅' : '❌'}</p>
+                <p>VR: {xrSupported.vr ? '✅' : '❌'}</p>
+                <p>AR: {xrSupported.ar ? '✅' : '❌'}</p>
+              </div>
+            )}
           </div>
         </Html>
       </Canvas>
