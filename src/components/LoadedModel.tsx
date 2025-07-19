@@ -14,6 +14,7 @@ interface LoadedModelProps {
 export function LoadedModel({ url, onError, onLoad, isXRMode = false }: LoadedModelProps) {
   const groupRef = useRef<Group>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isProcessed, setIsProcessed] = useState(false);
   
   console.log('LoadedModel: Rendering with URL:', url, 'XR Mode:', isXRMode);
   
@@ -34,11 +35,12 @@ export function LoadedModel({ url, onError, onLoad, isXRMode = false }: LoadedMo
   // Reset loaded state when URL changes
   useEffect(() => {
     setIsLoaded(false);
+    setIsProcessed(false);
     console.log('LoadedModel: URL changed, resetting loaded state');
   }, [url]);
   
   useEffect(() => {
-    if (obj && groupRef.current) {
+    if (obj && groupRef.current && !isProcessed) {
       try {
         console.log('LoadedModel: Processing loaded object...');
         
@@ -82,6 +84,7 @@ export function LoadedModel({ url, onError, onLoad, isXRMode = false }: LoadedMo
         });
         
         console.log('LoadedModel: Model setup complete, calling onLoad');
+        setIsProcessed(true);
         setIsLoaded(true);
         onLoad();
       } catch (error) {
@@ -89,11 +92,11 @@ export function LoadedModel({ url, onError, onLoad, isXRMode = false }: LoadedMo
         onError(error instanceof Error ? error.message : 'Failed to process model');
       }
     }
-  }, [obj, onLoad, onError, isXRMode]);
+  }, [obj, onLoad, onError, isXRMode, isProcessed]);
 
-  // Subtle rotation animation
+  // Subtle rotation animation - disabled in XR mode to prevent flickering
   useFrame((state) => {
-    if (groupRef.current && isLoaded) {
+    if (groupRef.current && isLoaded && !isXRMode) {
       groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.2) * 0.05;
     }
   });

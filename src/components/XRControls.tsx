@@ -1,11 +1,13 @@
 import { Monitor } from 'lucide-react';
+import { VRButton, ARButton } from '@react-three/xr';
 
 interface XRControlsProps {
   isXRMode: boolean;
   onXRModeChange: (mode: boolean) => void;
+  xrSupported?: { ar: boolean; vr: boolean };
 }
 
-export function XRControls({ isXRMode, onXRModeChange }: XRControlsProps) {
+export function XRControls({ isXRMode, onXRModeChange, xrSupported = { ar: false, vr: false } }: XRControlsProps) {
   return (
     <div className="flex items-center space-x-3">
       <div className="flex items-center space-x-2 bg-black/20 backdrop-blur-sm rounded-lg p-2">
@@ -24,8 +26,56 @@ export function XRControls({ isXRMode, onXRModeChange }: XRControlsProps) {
         </button>
         
         {/* Note: VR/AR buttons are now inside the 3D viewer */}
-        <div className="text-xs text-gray-400 px-2">
-          VR/AR buttons are in the 3D viewer
+        <div className="flex items-center space-x-2">
+          {/* VR Button */}
+          <VRButton 
+            style={{
+              padding: '8px 12px',
+              backgroundColor: xrSupported.vr 
+                ? 'rgba(59, 130, 246, 0.95)' 
+                : 'rgba(107, 114, 128, 0.95)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '11px',
+              fontWeight: '500',
+              cursor: xrSupported.vr ? 'pointer' : 'not-allowed',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              opacity: xrSupported.vr ? 1 : 0.6,
+              minHeight: '36px',
+              minWidth: '80px',
+              justifyContent: 'center'
+            }}
+          >
+            🥽 VR
+          </VRButton>
+          
+          {/* AR Button */}
+          <ARButton 
+            style={{
+              padding: '8px 12px',
+              backgroundColor: xrSupported.ar 
+                ? 'rgba(16, 185, 129, 0.95)' 
+                : 'rgba(107, 114, 128, 0.95)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '11px',
+              fontWeight: '500',
+              cursor: xrSupported.ar ? 'pointer' : 'not-allowed',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              opacity: xrSupported.ar ? 1 : 0.6,
+              minHeight: '36px',
+              minWidth: '80px',
+              justifyContent: 'center'
+            }}
+          >
+            📱 AR
+          </ARButton>
         </div>
       </div>
     </div>

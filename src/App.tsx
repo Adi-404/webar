@@ -13,6 +13,7 @@ function App() {
   const [fileName, setFileName] = useState<string>('apple.obj'); // Pre-set filename
   const [isXRMode, setIsXRMode] = useState(false);
   const [showBasicExample, setShowBasicExample] = useState(false);
+  const [xrSupported, setXrSupported] = useState({ ar: false, vr: false });
 
   const handleFileSelect = (url: string, name: string) => {
     setModelUrl(url);
@@ -30,6 +31,10 @@ function App() {
 
   const handleXRModeChange = (mode: boolean) => {
     setIsXRMode(mode);
+  };
+
+  const handleXRSupportChange = (support: { ar: boolean; vr: boolean }) => {
+    setXrSupported(support);
   };
 
   return (
@@ -63,6 +68,7 @@ function App() {
             <XRControls 
               isXRMode={isXRMode}
               onXRModeChange={handleXRModeChange}
+              xrSupported={xrSupported}
             />
           </div>
         </div>
@@ -162,6 +168,7 @@ function App() {
               <ModelViewer 
                 modelUrl={modelUrl}
                 isXRMode={isXRMode}
+                onXRSupportChange={handleXRSupportChange}
               />
               
               <ControlPanel isXRMode={isXRMode} />
@@ -179,9 +186,11 @@ function App() {
         </div>
       </div>
       
-      {/* Debug Panels */}
-      <XRDebugPanel />
-      <CameraDebugPanel />
+      {/* Debug Panels - Hidden on mobile */}
+      <div className="hidden md:block">
+        <XRDebugPanel />
+        <CameraDebugPanel />
+      </div>
     </div>
   );
 }

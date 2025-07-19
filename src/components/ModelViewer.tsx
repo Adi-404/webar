@@ -1,7 +1,7 @@
 import { Suspense, useRef, useState, useEffect } from 'react';
 import { Canvas} from '@react-three/fiber';
 import { OrbitControls, Environment, ContactShadows, Text, Html } from '@react-three/drei';
-import { XR, Controllers, Hands, VRButton, ARButton } from '@react-three/xr';
+import { XR, Controllers, Hands } from '@react-three/xr';
 import { Group } from 'three';
 import { LoadedModel } from './LoadedModel';
 import { Loader } from './Loader';
@@ -9,12 +9,12 @@ import { Loader } from './Loader';
 interface ModelViewerProps {
   modelUrl: string | null;
   isXRMode: boolean;
+  onXRSupportChange?: (support: { ar: boolean; vr: boolean }) => void;
 }
 
-export function ModelViewer({ modelUrl, isXRMode }: ModelViewerProps) {
+export function ModelViewer({ modelUrl, isXRMode, onXRSupportChange }: ModelViewerProps) {
   const groupRef = useRef<Group>(null);
   const [modelError, setModelError] = useState<string | null>(null);
-  const [xrSupported, setXrSupported] = useState({ ar: false, vr: false });
 
   // Debug logging
   console.log('ModelViewer render:', { modelUrl, isXRMode, hasUrl: !!modelUrl });
@@ -26,15 +26,20 @@ export function ModelViewer({ modelUrl, isXRMode }: ModelViewerProps) {
         try {
           const arSupported = await navigator.xr.isSessionSupported('immersive-ar');
           const vrSupported = await navigator.xr.isSessionSupported('immersive-vr');
-          setXrSupported({ ar: arSupported, vr: vrSupported });
+          const support = { ar: arSupported, vr: vrSupported };
+          onXRSupportChange?.(support);
         } catch (error) {
           console.log('WebXR not supported:', error);
-          setXrSupported({ ar: false, vr: false });
+          const support = { ar: false, vr: false };
+          onXRSupportChange?.(support);
         }
+      } else {
+        const support = { ar: false, vr: false };
+        onXRSupportChange?.(support);
       }
     };
     checkXRSupport();
-  }, []);
+  }, [onXRSupportChange]);
 
   const handleModelError = (error: string) => {
     console.error('ModelViewer: Model error:', error);
@@ -48,9 +53,9 @@ export function ModelViewer({ modelUrl, isXRMode }: ModelViewerProps) {
 
   return (
     <div className="relative w-full h-full">
-      {/* Debug Info */}
+      {/* Debug Info - Hidden on mobile */}
       {modelUrl && (
-        <div className="absolute top-2 lg:top-4 left-2 lg:left-4 bg-black/80 text-white p-2 rounded text-xs z-50 max-w-[200px] lg:max-w-none">
+        <div className="hidden md:block absolute top-2 lg:top-4 left-2 lg:left-4 bg-black/80 text-white p-2 rounded text-xs z-50 max-w-[200px] lg:max-w-none">
           <p>Model: {modelUrl ? '✓' : '✗'}</p>
           <p>XR: {isXRMode ? 'ON' : 'OFF'}</p>
           <p>Error: {modelError || 'None'}</p>
@@ -60,12 +65,14 @@ export function ModelViewer({ modelUrl, isXRMode }: ModelViewerProps) {
       <Canvas
         camera={{ position: [0, 0, 5], fov: 50 }}
         shadows
+        frameloop="always"
         gl={{ 
           antialias: true, 
-          alpha: isXRMode ? true : true,
-          preserveDrawingBuffer: true 
+          alpha: true,
+          preserveDrawingBuffer: true,
+          powerPreference: "high-performance"
         }}
-        className="bg-gradient-to-b from-slate-900 to-slate-800"
+        className={isXRMode ? "bg-transparent" : "bg-gradient-to-b from-slate-900 to-slate-800"}
       >
         {/* XR Setup for AR/VR */}
         <XR 
@@ -99,7 +106,6 @@ export function ModelViewer({ modelUrl, isXRMode }: ModelViewerProps) {
           <Suspense fallback={<Loader />}>
             {modelUrl ? (
               <LoadedModel 
-                key={`${modelUrl}-${isXRMode}`} // Force re-render when mode changes
                 url={modelUrl} 
                 onError={handleModelError}
                 onLoad={clearError}
@@ -136,99 +142,15 @@ export function ModelViewer({ modelUrl, isXRMode }: ModelViewerProps) {
           />
         )}
         
-        {/* Error Display */}
+        {/* Error Display - Hidden on mobile */}
         {modelError && (
           <Html center>
-            <div className="bg-red-500/90 text-white p-4 rounded-lg backdrop-blur-sm">
+            <div className="hidden md:block bg-red-500/90 text-white p-4 rounded-lg backdrop-blur-sm">
               <p className="font-medium">Error loading model:</p>
               <p className="text-sm opacity-90">{modelError}</p>
             </div>
           </Html>
         )}
-        
-        {/* XR Buttons - Must be inside Canvas */}
-        <Html position={[0, 0, 0]} transform={false} style={{ 
-          position: 'fixed', 
-          top: window.innerWidth < 768 ? '120px' : '90px', // Adjust for mobile header
-          right: '10px',
-          zIndex: 1000 
-        }}>
-          <div className="flex flex-col space-y-2">
-            {/* WebXR Support Check */}
-            {!navigator.xr && (
-              <div className="bg-orange-500/90 text-white p-2 lg:p-3 rounded-lg text-xs lg:text-sm max-w-xs">
-                <p className="font-medium">WebXR Not Available</p>
-                <p className="text-xs opacity-90">
-                  Using HTTPS: {location.protocol === 'https:' ? '✓' : '✗'}
-                </p>
-                <p className="text-xs opacity-90">
-                  Device: {navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}
-                </p>
-              </div>
-            )}
-            
-            {/* VR Button */}
-            <VRButton 
-              style={{
-                padding: window.innerWidth < 768 ? '10px 12px' : '12px 16px',
-                backgroundColor: xrSupported.vr 
-                  ? 'rgba(59, 130, 246, 0.95)' 
-                  : 'rgba(107, 114, 128, 0.95)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: window.innerWidth < 768 ? '12px' : '14px',
-                fontWeight: '500',
-                cursor: xrSupported.vr ? 'pointer' : 'not-allowed',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                backdropFilter: 'blur(8px)',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                opacity: xrSupported.vr ? 1 : 0.6,
-                minWidth: window.innerWidth < 768 ? '120px' : '140px'
-              }}
-            >
-              🥽 {window.innerWidth < 768 ? 'VR' : (xrSupported.vr ? 'Enter VR' : 'VR Unavailable')}
-            </VRButton>
-            
-            {/* AR Button */}
-            <ARButton 
-              style={{
-                padding: window.innerWidth < 768 ? '10px 12px' : '12px 16px',
-                backgroundColor: xrSupported.ar 
-                  ? 'rgba(16, 185, 129, 0.95)' 
-                  : 'rgba(107, 114, 128, 0.95)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: window.innerWidth < 768 ? '12px' : '14px',
-                fontWeight: '500',
-                cursor: xrSupported.ar ? 'pointer' : 'not-allowed',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                backdropFilter: 'blur(8px)',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                opacity: xrSupported.ar ? 1 : 0.6,
-                minWidth: window.innerWidth < 768 ? '120px' : '140px'
-              }}
-            >
-              📱 {window.innerWidth < 768 ? 'AR' : (xrSupported.ar ? 'Enter AR' : 'AR Unavailable')}
-            </ARButton>
-            
-            {/* Status Info - Hide on very small screens */}
-            {window.innerWidth >= 640 && (
-              <div className="bg-gray-900/90 text-gray-300 p-2 rounded-lg text-xs max-w-xs">
-                <p className="font-medium mb-1">Status:</p>
-                <p>HTTPS: {location.protocol === 'https:' ? '✅' : '❌'}</p>
-                <p>WebXR: {navigator.xr ? '✅' : '❌'}</p>
-                <p>VR: {xrSupported.vr ? '✅' : '❌'}</p>
-                <p>AR: {xrSupported.ar ? '✅' : '❌'}</p>
-              </div>
-            )}
-          </div>
-        </Html>
       </Canvas>
     </div>
   );
