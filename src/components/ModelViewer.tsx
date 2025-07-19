@@ -9,10 +9,11 @@ import { Loader } from './Loader';
 interface ModelViewerProps {
   modelUrl: string | null;
   isXRMode: boolean;
+  xrMode?: 'ar' | 'vr' | 'none';
   onXRSupportChange?: (support: { ar: boolean; vr: boolean }) => void;
 }
 
-export function ModelViewer({ modelUrl, isXRMode, onXRSupportChange }: ModelViewerProps) {
+export function ModelViewer({ modelUrl, isXRMode, xrMode = 'none', onXRSupportChange }: ModelViewerProps) {
   const groupRef = useRef<Group>(null);
   const [modelError, setModelError] = useState<string | null>(null);
 
@@ -58,6 +59,7 @@ export function ModelViewer({ modelUrl, isXRMode, onXRSupportChange }: ModelView
         <div className="hidden md:block absolute top-2 lg:top-4 left-2 lg:left-4 bg-black/80 text-white p-2 rounded text-xs z-50 max-w-[200px] lg:max-w-none">
           <p>Model: {modelUrl ? '✓' : '✗'}</p>
           <p>XR: {isXRMode ? 'ON' : 'OFF'}</p>
+          <p>Mode: {xrMode.toUpperCase()}</p>
           <p>Error: {modelError || 'None'}</p>
         </div>
       )}
@@ -72,14 +74,14 @@ export function ModelViewer({ modelUrl, isXRMode, onXRSupportChange }: ModelView
           preserveDrawingBuffer: true,
           powerPreference: "high-performance"
         }}
-        className={isXRMode ? "bg-transparent" : "bg-gradient-to-b from-slate-900 to-slate-800"}
+        className={xrMode === 'ar' ? "bg-transparent" : "bg-gradient-to-b from-slate-900 to-slate-800"}
       >
         {/* XR Setup for AR/VR */}
         <XR 
           referenceSpace="local-floor"
           onSessionStart={() => {
             console.log('XR Session Started');
-            console.log('AR mode should enable camera access');
+            console.log('XR mode should enable immersive experience');
           }}
           onSessionEnd={() => {
             console.log('XR Session Ended');
@@ -89,20 +91,20 @@ export function ModelViewer({ modelUrl, isXRMode, onXRSupportChange }: ModelView
           <Hands />
         </XR>
         
-        {/* Lighting Setup - Adjusted for AR */}
-        <ambientLight intensity={isXRMode ? 0.8 : 0.4} />
+        {/* Lighting Setup - Optimized for different XR modes */}
+        <ambientLight intensity={xrMode === 'ar' ? 0.8 : xrMode === 'vr' ? 0.6 : 0.4} />
         <directionalLight 
           position={[10, 10, 5]} 
-          intensity={isXRMode ? 1.5 : 1} 
+          intensity={xrMode === 'ar' ? 1.5 : xrMode === 'vr' ? 1.2 : 1} 
           castShadow
         />
-        <pointLight position={[-10, -10, -10]} intensity={isXRMode ? 0.8 : 0.5} />
+        <pointLight position={[-10, -10, -10]} intensity={xrMode === 'ar' ? 0.8 : xrMode === 'vr' ? 0.6 : 0.5} />
         
-        {/* Environment - Remove for AR mode to show camera */}
-        {!isXRMode && <Environment preset="city" />}
+        {/* Environment - Only remove for AR mode to show camera, keep for VR */}
+        {xrMode !== 'ar' && <Environment preset="city" />}
         
-        {/* Simple Model Group for Testing */}
-        <group ref={groupRef} position={isXRMode ? [0, 0, -1] : [0, 0, 0]}>
+        {/* Model Group - Different positioning for AR vs VR */}
+        <group ref={groupRef} position={xrMode === 'ar' ? [0, 0, -1] : xrMode === 'vr' ? [0, 0, -2] : [0, 0, 0]}>
           <Suspense fallback={<Loader />}>
             {modelUrl ? (
               <LoadedModel 
@@ -110,6 +112,7 @@ export function ModelViewer({ modelUrl, isXRMode, onXRSupportChange }: ModelView
                 onError={handleModelError}
                 onLoad={clearError}
                 isXRMode={isXRMode}
+                xrMode={xrMode}
               />
             ) : (
               <PlaceholderScene isXRMode={isXRMode} />
@@ -117,8 +120,8 @@ export function ModelViewer({ modelUrl, isXRMode, onXRSupportChange }: ModelView
           </Suspense>
         </group>
         
-        {/* Ground Shadows - Only in desktop mode */}
-        {!isXRMode && (
+        {/* Ground Shadows - Only in desktop mode and VR */}
+        {(xrMode === 'none' || xrMode === 'vr') && (
           <ContactShadows 
             position={[0, -2, 0]} 
             opacity={0.4} 
@@ -129,7 +132,7 @@ export function ModelViewer({ modelUrl, isXRMode, onXRSupportChange }: ModelView
         )}
         
         {/* Controls - Only show orbit controls in desktop mode */}
-        {!isXRMode && (
+        {xrMode === 'none' && (
           <OrbitControls 
             enablePan={true}
             enableZoom={true}

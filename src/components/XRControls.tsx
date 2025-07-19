@@ -4,15 +4,19 @@ import { VRButton, ARButton } from '@react-three/xr';
 interface XRControlsProps {
   isXRMode: boolean;
   onXRModeChange: (mode: boolean) => void;
+  onXRTypeChange?: (type: 'ar' | 'vr' | 'none') => void;
   xrSupported?: { ar: boolean; vr: boolean };
 }
 
-export function XRControls({ isXRMode, onXRModeChange, xrSupported = { ar: false, vr: false } }: XRControlsProps) {
+export function XRControls({ isXRMode, onXRModeChange, onXRTypeChange, xrSupported = { ar: false, vr: false } }: XRControlsProps) {
   return (
     <div className="flex items-center space-x-3">
       <div className="flex items-center space-x-2 bg-black/20 backdrop-blur-sm rounded-lg p-2">
         <button
-          onClick={() => onXRModeChange(false)}
+          onClick={() => {
+            onXRModeChange(false);
+            onXRTypeChange?.('none');
+          }}
           className={`
             p-2 rounded-md transition-all duration-200 flex items-center space-x-2
             ${!isXRMode 
@@ -29,6 +33,11 @@ export function XRControls({ isXRMode, onXRModeChange, xrSupported = { ar: false
         <div className="flex items-center space-x-2">
           {/* VR Button */}
           <VRButton 
+            onSelect={() => {
+              console.log('VR button clicked');
+              onXRTypeChange?.('vr');
+              onXRModeChange(true);
+            }}
             style={{
               padding: '8px 12px',
               backgroundColor: xrSupported.vr 
@@ -54,6 +63,11 @@ export function XRControls({ isXRMode, onXRModeChange, xrSupported = { ar: false
           
           {/* AR Button */}
           <ARButton 
+            onSelect={() => {
+              console.log('AR button clicked');
+              onXRTypeChange?.('ar');
+              onXRModeChange(true);
+            }}
             style={{
               padding: '8px 12px',
               backgroundColor: xrSupported.ar 

@@ -14,6 +14,7 @@ function App() {
   const [isXRMode, setIsXRMode] = useState(false);
   const [showBasicExample, setShowBasicExample] = useState(false);
   const [xrSupported, setXrSupported] = useState({ ar: false, vr: false });
+  const [xrType, setXrType] = useState<'ar' | 'vr' | 'none'>('none');
 
   const handleFileSelect = (url: string, name: string) => {
     setModelUrl(url);
@@ -31,6 +32,13 @@ function App() {
 
   const handleXRModeChange = (mode: boolean) => {
     setIsXRMode(mode);
+    if (!mode) {
+      setXrType('none');
+    }
+  };
+
+  const handleXRTypeChange = (type: 'ar' | 'vr' | 'none') => {
+    setXrType(type);
   };
 
   const handleXRSupportChange = (support: { ar: boolean; vr: boolean }) => {
@@ -68,6 +76,7 @@ function App() {
             <XRControls 
               isXRMode={isXRMode}
               onXRModeChange={handleXRModeChange}
+              onXRTypeChange={handleXRTypeChange}
               xrSupported={xrSupported}
             />
           </div>
@@ -168,6 +177,7 @@ function App() {
               <ModelViewer 
                 modelUrl={modelUrl}
                 isXRMode={isXRMode}
+                xrMode={xrType}
                 onXRSupportChange={handleXRSupportChange}
               />
               

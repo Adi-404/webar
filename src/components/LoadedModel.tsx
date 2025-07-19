@@ -9,9 +9,10 @@ interface LoadedModelProps {
   onError: (error: string) => void;
   onLoad: () => void;
   isXRMode?: boolean;
+  xrMode?: 'ar' | 'vr' | 'none';
 }
 
-export function LoadedModel({ url, onError, onLoad, isXRMode = false }: LoadedModelProps) {
+export function LoadedModel({ url, onError, onLoad, isXRMode = false, xrMode = 'none' }: LoadedModelProps) {
   const groupRef = useRef<Group>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isProcessed, setIsProcessed] = useState(false);
@@ -53,8 +54,15 @@ export function LoadedModel({ url, onError, onLoad, isXRMode = false }: LoadedMo
         
         // Calculate scale to fit model in viewport
         const maxDim = Math.max(size.x, size.y, size.z);
-        // Use smaller scale for AR mode to make models more manageable
-        const targetSize = isXRMode ? 0.5 : 2;
+        // Different scales for different modes
+        let targetSize: number;
+        if (xrMode === 'ar') {
+          targetSize = 0.5; // Smaller for AR (table-top scale)
+        } else if (xrMode === 'vr') {
+          targetSize = 1.5; // Larger for VR (immersive scale)
+        } else {
+          targetSize = 2; // Desktop scale
+        }
         const scale = targetSize / maxDim;
         
         console.log('LoadedModel: Applying scale:', scale);
@@ -92,7 +100,7 @@ export function LoadedModel({ url, onError, onLoad, isXRMode = false }: LoadedMo
         onError(error instanceof Error ? error.message : 'Failed to process model');
       }
     }
-  }, [obj, onLoad, onError, isXRMode, isProcessed]);
+  }, [obj, onLoad, onError, isXRMode, xrMode, isProcessed]);
 
   // Subtle rotation animation - disabled in XR mode to prevent flickering
   useFrame((state) => {
